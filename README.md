@@ -1,5 +1,5 @@
 # Uber_Ride_Analysis 🚗💸💻
-Introduction 📝
+# Introduction 📝
 This project analyzes the dataset of Uber and Lyft for Boston during November and December to predict the price, which is the target variable. The goal of the project is to build a model that accurately predicts the price based on various factors such as distance, time of day, and weather conditions.
 
 # Who can benefit? 🤔
