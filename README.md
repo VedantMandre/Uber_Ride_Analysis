@@ -20,3 +20,7 @@ The dataset used in this study was sourced from Kaggle and pertains to the compa
 
 # Variables 📈
 There are 57 variables in dataset consisting of 46 numeric and 11 categorical variables. Out of the original 57 variables, several have been removed during the data cleaning and transformation stage. These include "Id" which was only used for unique records, "Datetime" and "Timestamp" as month, day, and hour were already available, and "Timezone" which was only one time zone. "Product_id"
+
+# Links🔗
+https://www.kaggle.com/vedantmandre
+https://www.linkedin.com/in/vedantmandre/
