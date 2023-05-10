@@ -1,0 +1,309 @@
+---
+title: "Final_Project"
+author: "Group Project"
+date: "2023-04-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(DataExplorer)
+library(tidyverse)
+library(skimr)
+library(caret)
+```
+
+```{r}
+# Set the working directory
+setwd("D:/datascience")
+
+# Read the CSV file into R
+rideshare <- read.csv("rideshare_kaggle.csv")
+
+# View the first few rows of the dataset
+head(rideshare)
+```
+
+```{r}
+glimpse(rideshare)
+```
+
+```{r}
+#Count the number of unique values in each column of the dataset
+rideshare_unique <- summarize_all(rideshare, n_distinct)
+```
+
+```{r}
+rideshare_unique
+```
+
+```{r}
+# Check if any column in the dataset contains missing values and data type of columns
+skim(rideshare)
+```
+
+Here we can clearly see that there are some null values in the "price" column. Approximately 8% values are null in the price column.
+
+We are able to identify that there are 46 columns that have numeric values out of the 57 and remaining 11 columns have categorical values.
+
+We will be handling the null values in the later stages of the processing but for now we will find out the column names of categorical columns.
+
+```{r}
+# Select the columns in the dataset that have data type 'character' or 'factor'
+categorical_cols <- names(rideshare)[sapply(rideshare, is.character) | sapply(rideshare, is.factor)]
+
+# Print the resulting column names
+categorical_cols
+
+```
+
+## Data Cleaning and Transformation
+
+#### We are removing following columns:
+Id: Used only for unique records.
+Datetime, Timestamp: As we already have month, day, hour.
+Timezone: Only one timezone so we can remove it.
+Product_id:Removing product_id as we are considering product name.
+Every column related to weather. Currently not dealing with the weather aspect and hence removing all the related columns.
+longitude and latitude: as we have the destination name
+
+```{r}
+# Remove the specified columns from the dataset
+rideshare <- select(rideshare, -id, -datetime, -timezone, -timestamp, -latitude, -longitude, -temperature, -apparentTemperature, -short_summary, -long_summary, -product_id, -precipIntensity, -precipProbability, -humidity, -windSpeed, -windGust, -windGustTime, -visibility, -temperatureHigh, -temperatureHighTime, -temperatureLow, -temperatureLowTime, -apparentTemperatureHigh, -apparentTemperatureHighTime, -apparentTemperatureLow, -apparentTemperatureLowTime, -icon, -dewPoint, -pressure, -windBearing, -cloudCover, -uvIndex, -visibility.1, -ozone, -sunriseTime, -sunsetTime, -moonPhase, -precipIntensityMax, -uvIndexTime, -temperatureMin, -temperatureMinTime, -temperatureMax, -temperatureMaxTime, -apparentTemperatureMin, -apparentTemperatureMinTime, -apparentTemperatureMax, -apparentTemperatureMaxTime)
+```
+
+```{r}
+glimpse(rideshare)
+```
+
+```{r}
+summary(rideshare)
+```
+
+```{r}
+introduce(rideshare)
+```
+
+```{r}
+# Plot density graphs
+ggplot(rideshare, aes(x = distance)) +
+  geom_density() +
+  labs(x = "Ride Distance", y = "Density")
+
+# Density plot for ride price
+ggplot(rideshare, aes(x = price)) +
+  geom_density() +
+  labs(x = "Ride Price", y = "Density")
+
+# Density plot for ride hour
+ggplot(rideshare, aes(x = hour)) +
+  geom_density() +
+  labs(x = "Ride Hour", y = "Density")
+
+# Density plot for surge multiplier
+ggplot(rideshare, aes(x = surge_multiplier)) +
+  geom_density() +
+  labs(x = "Surge Multiplier", y = "Density")
+
+# Density plot for ride month
+ggplot(rideshare, aes(x = month)) +
+  geom_density() +
+  labs(x = "Ride Month", y = "Density")
+
+
+ggplot(rideshare, aes(x = distance, y = price)) +
+  geom_violin() +
+  labs(x = "Distance", y = "Price")
+
+```
+
+```{r}
+plot_intro(rideshare)
+```
+
+```{r}
+# Replace missing values in 'price' column with mean value
+rideshare <- mutate(rideshare, price = ifelse(is.na(price), mean(price, na.rm = TRUE), price))
+
+# Check if there are any missing values left in 'price' column
+sum(is.na(rideshare$price))
+```
+
+As we can see we have removed the null values from the column name price by imputing them with the mean of all the values in the price column, we could have also replaced them with the median of the values.
+
+```{r}
+plot_missing(rideshare)
+```
+
+```{r}
+plot_bar(rideshare)
+```
+
+```{r}
+plot_histogram(rideshare)
+```
+
+```{r}
+sample_data <- rideshare[1:20000,]
+
+ggplot(sample_data, aes(x = distance, y = price, color=surge_multiplier, shape=cab_type)) +
+  geom_point()
+```
+
+```{r}
+ggplot(sample_data, aes(x = price)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  ggtitle("Histogram of Price") +
+  xlab("Price") +
+  ylab("Count")
+
+ggplot(sample_data, aes(y = price)) +
+  geom_boxplot(fill = "lightblue", color = "black") +
+  ggtitle("Boxplot of Price") +
+  xlab("") +
+  ylab("Price")
+```
+
+```{r}
+ggplot(data=sample_data, aes(x=hour, y=price, color=cab_type)) + 
+  geom_point() + 
+  xlab("hour") +
+  ylab("Price")
+```
+
+```{r}
+ggplot(data = sample_data, aes(x=distance, y=price, color=cab_type)) + 
+  geom_point(alpha=0.9)
+```
+
+```{r}
+ggplot(data = sample_data)+  theme_linedraw()+
+  geom_point(mapping = aes(x = price, y = distance, color = cab_type))+
+  geom_smooth(mapping = aes(x = price, y = distance)) +
+  scale_colour_viridis_d()
+
+#revenue generated each month
+ggplot(sample_data, aes(x = month, y = price)) +
+  geom_point(alpha = 0.5) +
+  ggtitle("Price by Month") +
+  xlab("Month") +
+  ylab("Price")
+
+#scatter plot showing the density of pick-ups and drop-offs at different locations
+ggplot(sample_data, aes(x = destination, y = source)) +
+  geom_bin2d(binwidth = c(0.02, 0.02), color = "white", alpha = 0.8) +
+  ggtitle("Pick-up and Drop-off Heatmap") +
+  xlab("Destination") +
+  ylab("Source") +
+  scale_fill_gradient(low = "green", high = "red") +
+  theme(axis.text.x = element_text(angle = 90)) +
+  coord_equal(ratio = 1)
+```
+
+```{r}
+ggplot(sample_data, aes(x = name)) +
+  geom_bar() +
+  ggtitle("Trips by Car Type") +
+  xlab("Car Type") +
+  ylab("Total Trips") +
+  theme(axis.text.x = element_text(angle = 90))
+
+```
+
+## Observation:
+Price range of Lyft is every time higher than Uber There are many outliers present in the data especially in Uber. Let's work on removing the outliers:
+
+Here we first calculate the Interquartile range and then we replace any values in the price variable that fall outside the upper and lower limits with NA, this is done to remove the data points that can skew our analysis and model
+
+```{r}
+quantiles <- quantile(rideshare$price, probs = c(0.25, 0.75), na.rm = TRUE)
+IQR <- IQR(rideshare$price, na.rm = TRUE)
+upper <- quantiles[2] + 1.5 * IQR
+lower <- quantiles[1] - 1.5 * IQR
+
+#replace the outliers with NA using ifelse function and mutate the price variable in rideshare
+rideshare <- rideshare %>% 
+  mutate(price = ifelse(price > upper | price < lower, NA, price))
+```
+
+
+```{r}
+#replacing the missing values in the "price" column with the mean value once again.
+rideshare <- rideshare %>%
+  mutate(price = ifelse(is.na(price), mean(price, na.rm = TRUE), price))
+```
+
+## Data Preparation
+
+Extracting categorical columns from the updated dataset:
+```{r}
+categorical_cols <- rideshare %>% 
+  select_if(is.character) %>% 
+  names()
+
+categorical_cols
+```
+
+Extracting numerical columns from the updated dataset
+
+```{r}
+numeric_cols <- rideshare %>%
+  select_if(is.numeric) %>%
+  names()
+
+numeric_cols
+```
+
+```{r}
+skim(rideshare)
+```
+
+Everything is good till now!! AS PER PLAN
+
+We need to convert categorical columns into numerical columns by one hot encoding and then we will perform standard scaling on numeric data.
+
+```{r}
+# Convert categorical columns to dummy variables
+dummy_vars <- model.matrix(~ source + destination + cab_type + name - 1, data = rideshare)
+
+# Rename the columns
+colnames(dummy_vars) <- paste0("encoded_", colnames(dummy_vars))
+
+# Add the dummy variables to the original data frame and remove the original categorical columns
+rideshare <- cbind(rideshare, dummy_vars)
+rideshare <- subset(rideshare, select = -c(source, destination, cab_type, name))
+```
+
+Here we have successfully encoded the categorical columns and then concatenated those columns with the original dataframe.
+
+```{r}
+glimpse(rideshare)
+```
+
+```{r}
+#This is just to check how many unique values are present in the dataset for each of the columns
+rideshare_unique <- summarize_all(rideshare, n_distinct)
+rideshare_unique
+```
+
+Here we are first identifying all the cols with numeric variables and then we normalise them with the scale() so that each variable has mean 0 and SD 1.
+
+```{r}
+numeric_cols <- sapply(rideshare, is.numeric)  # get column indices of numeric variables
+rideshare[numeric_cols] <- scale(rideshare[numeric_cols])  # standardize numeric variables
+```
+
+## The Dataframe after preprocessing
+```{r}
+rideshare
+```
+
+creating a new csv file at the end of the pre-processing and saving this a rideshare.csv in local drive
+
+```{r}
+write.csv(rideshare, "rideshare.csv", row.names = FALSE)
+```
+

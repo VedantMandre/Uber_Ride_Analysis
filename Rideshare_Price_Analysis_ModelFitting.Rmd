@@ -1,0 +1,121 @@
+---
+title: "Project_2Model"
+output: html_document
+date: "2023-04-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(skimr)
+library(caret)
+library(DataExplorer)
+library(Metrics)
+```
+
+```{r}
+# Set the working directory
+setwd("D:/datascience")
+
+# Read the CSV file into R
+rideshare <- read.csv("rideshare.csv")
+
+# View the first few rows of the dataset
+head(rideshare)
+```
+
+```{r}
+glimpse(rideshare)
+```
+
+
+```{r}
+# Remove rows with missing values
+data <- na.omit(rideshare)
+
+# Separate the target variable (Price) from the feature variables
+X <- data[, -which(names(data) == "price")]
+y <- data$price
+
+# Get the number of instances and features
+instances <- nrow(X)
+features <- ncol(X)
+
+# Create an identity vector of ones
+identity_vector <- matrix(rep(1, instances))
+
+# Split the data into training and testing sets
+set.seed(40) # for reproducibility
+train_index <- createDataPartition(y, p = 0.8, list = FALSE)
+X_train <- X[train_index, ]
+X_test <- X[-train_index, ]
+y_train <- y[train_index]
+y_test <- y[-train_index]
+
+```
+
+```{r}
+class(X_train)
+class(y_train)
+```
+
+#These are print functions used to print the console outputs in R, we are also performing this step just to analyse the data
+```{r}
+# Print out some basic statistics for the training and testing sets
+cat("Training set shape:", dim(X_train), "\n")
+cat("Testing set shape:", dim(X_test), "\n")
+cat("Training set mean:", mean(as.numeric(unlist(X_train))), mean(y_train), "\n")
+cat("Testing set mean:", mean(as.numeric(unlist(X_test))), mean(y_test), "\n")
+cat("Training set standard deviation:", sd(as.numeric(unlist(X_train))), sd(y_train), "\n")
+cat("Testing set standard deviation:", sd(as.numeric(unlist(X_test))), sd(y_test), "\n")
+
+```
+
+#There is not much difference between training and validation loss. This indicates that model is performing reasonably well. It's not underfitting or overfitting with dataset.
+
+```{r}
+perform_lr <- function(X_train, X_test, train_y, test_y) {
+  lr <- lm(train_y ~ ., data = as.data.frame(X_train))
+  y_train_pred <- predict(lr, newdata = as.data.frame(X_train))
+  y_val_pred <- predict(lr, newdata = as.data.frame(X_test))
+
+  cat("Shape:", dim(X_train), "\n")
+  cat("Rank:", qr(X_train)$rank, "\n")
+  cat("Coefficients:", lr$coefficients, "\n")
+
+  cat("Training Loss\n")
+  cat("R^2:", summary(lm(train_y ~ y_train_pred))$r.squared, "\n")
+  cat("MAE:", mean(abs(y_train_pred - train_y)), "\n")
+  cat("RMSE:", sqrt(mean((y_train_pred - train_y)^2)), "\n\n")
+
+  cat("Validation Loss\n")
+  cat("R^2:", summary(lm(test_y ~ y_val_pred))$r.squared, "\n")
+  cat("MAE:", mean(abs(y_val_pred - test_y)), "\n")
+  cat("RMSE:", sqrt(mean((y_val_pred - test_y)^2)), "\n\n")
+
+  # Return the predicted values for the validation set
+  return(y_val_pred)
+}
+
+```
+
+#Below we are trying to train our Linear regression model
+```{r}
+# Train the model 
+y_val_pred <- perform_lr(X_train, X_test, y_train, y_test)
+df <- data.frame(actual = y_test, predicted = y_val_pred)
+```
+
+
+
+```{r}
+#create the plot
+ggplot(df, aes(x = predicted, y = actual)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  labs(x = "Predicted values", y = "Actual values", title = "Linear regression model performance")
+```
+
