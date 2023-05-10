@@ -15,8 +15,8 @@ By analyzing the Uber and Lyft data for Boston during November and December and 
 Based on the provided data, it seems that this is a dataset related to ride-hailing services such as Uber and Lyft. The data contains 693,071 rows and 57 columns. The columns include various attributes related to each ride such as the ride ID, timestamp, hour, day, month, and time zone, as well as the source and destination locations, the type of ride service (e.g., Lyft, Uber), and the product ID (e.g., Lyft Line, Lux Black XL). Other columns include information about the type of vehicle used, the driver's rating, the distance of the trip, the price, weather related data, and other relevant information.
 Overall, it seems like this data could be useful for analyzing ride-hailing services, such as identifying patterns in ride usage, exploring the factors that affect pricing, or understanding the demographics of riders.
 
-#Source 📌
+# Source 📌
 The dataset used in this study was sourced from Kaggle and pertains to the comparison between the ride-hailing services Uber and Lyft. Despite containing a significant number of missing values, the dataset offers an excellent opportunity for beginners to explore the relationship between various predictors such as the hour of the day and the corresponding price. Notably, the dataset also includes information on the weather conditions during each hour, including temperature, wind, and sunset, which are critical factors influencing ride-hailing demand. This additional data presents an opportunity to incorporate external factors into the analysis of the two ride-hailing services.
 
-#Variables 📈
+# Variables 📈
 There are 57 variables in dataset consisting of 46 numeric and 11 categorical variables. Out of the original 57 variables, several have been removed during the data cleaning and transformation stage. These include "Id" which was only used for unique records, "Datetime" and "Timestamp" as month, day, and hour were already available, and "Timezone" which was only one time zone. "Product_id"
